@@ -172,3 +172,31 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+
+
+# === AWS Lambda extras ===
+
+# Ignore zipped Lambda deployment packages and layers
+*.zip
+
+# Ignore lambda layer folders (e.g. local Python packages)
+layer/
+layers/
+lambda_layer/
+
+# Ignore AWS SAM build artifacts
+.aws-sam/
+
+# Ignore AWS CDK output
+.cdk.out/
+
+# Ignore Serverless Framework output
+.serverless/
+
+# Ignore Terraform state files (if you use infra-as-code)
+*.tfstate
+*.tfstate.backup
+
+# Ignore deployment scripts or generated code if applicable
+deploy/
