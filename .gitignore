@@ -1,0 +1,14 @@
+# Ignore compiled Python files
+*.pyc
+
+# Ignore local Python venvs
+.venv/
+
+# Ignore entire layer build artifacts
+backend/layer/
+
+# Ignore any big zip files
+*.zip
+
+backend/lambda_layer.zip
+backend/lambda_layer.zip
