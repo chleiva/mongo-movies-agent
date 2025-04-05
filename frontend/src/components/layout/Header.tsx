@@ -34,7 +34,9 @@ const Header = ({
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   return (
-    <header className="w-full h-16 bg-background border-b border-border flex items-center justify-between px-4 md:px-6 sticky top-0 z-50">
+
+
+    <header className="w-[calc(100%-40px) h-16 bg-background border-b border-border flex items-center justify-between px-4 md:px-6 sticky top-0 z-50">
 
 
 <div className="flex items-center gap-2 bg-black p-2">

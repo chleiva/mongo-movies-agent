@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import ConversationArea from "./ConversationArea";
 import MessageInput from "./MessageInput";
-import DocumentSidebar from "../sidebar/DocumentSidebar";
+import MovieSidebar from "../sidebar/MovieSidebar";
+import MovieList, { Movie } from '../MovieList';
 
 interface Message {
   id: string;
@@ -31,13 +32,16 @@ const ChatContainer = ({
   initialMessages = [
     {
       id: "1",
-      content: "Hello! I'm your AI assistant for manufacturing documents  .... You can ask me things like: Provide Safety information for FANUC robots or Installation instructions for Ligent Robot inCube20 ..... How can I help you today?",
+      content: "Hello, I am your movies expert, ask me any question about movies",
       sender: "bot",
       timestamp: new Date(Date.now() - 60000 * 5),
     },
   ],
   initialDocuments = [],
 }: ChatContainerProps) => {
+
+  const [movieResults, setMovieResults] = useState<Movie[]>([]);
+  const [lastQuery, setLastQuery] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [documents, setDocuments] = useState<AppDocument[]>(
     initialDocuments ?? []
@@ -101,8 +105,9 @@ const ChatContainer = ({
     setIsLoading(true);
   
     try {
+      setMovieResults([]); // Clear previous search results
       const response = await fetch(
-        "https://o43zaz9tv7.execute-api.us-west-2.amazonaws.com/prod/user/message",
+        "https://hgbb1jpvec.execute-api.us-west-2.amazonaws.com/prod/movies/search",
         {
           method: "POST",
           headers: {
@@ -110,14 +115,14 @@ const ChatContainer = ({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            user_id: "userId",
+            user_id: userId,
             request: content,
-            history: messages.map((msg) => ({
+            history: [...messages, userMessage].map((msg) => ({
               sender: msg.sender,
               content: msg.content,
               timestamp: msg.timestamp,
             })),
-          }),
+          }),  
         }
       );
     
@@ -133,14 +138,19 @@ const ChatContainer = ({
         console.error("Failed to parse JSON:", e);
         responseJson = {};
       }
-    
-      const botResponse =
-        responseJson.response !== undefined && responseJson.response !== null
-          ? responseJson.response
-          : "No response from bot";
-    
+
+      const message = responseJson.message || "Here are some movie results:";
+
+      const movieList = Array.isArray(responseJson.movies) ? responseJson.movies : [];
+      setMovieResults(movieList);  // 💾 Store movies in state
+      setLastQuery(content);
+      setIsSidebarOpen(true);
+      setMovieResults(movieList);
+      
+      const botResponse = message;
+
       console.log("Parsed bot response:", botResponse);
-    
+
       setMessages((prev) =>
         prev
           .filter((msg) => !msg.isLoading)
@@ -151,6 +161,8 @@ const ChatContainer = ({
             timestamp: new Date(),
           })
       );
+
+
     } catch (err) {
       console.error("Error calling API:", err);
       setMessages((prev) =>
@@ -165,7 +177,9 @@ const ChatContainer = ({
       );
     } finally {
       setIsLoading(false);
+  
     }
+
     
   };
   
@@ -241,17 +255,17 @@ const ChatContainer = ({
   return (
     <div className="flex h-full w-full bg-background">
       {/* Document Sidebar */}
-      <DocumentSidebar
-        url={sidebarUrl ?? undefined}
+      <MovieSidebar
         isOpen={isSidebarOpen}
         onToggle={toggleSidebar}
+        movies={movieResults}
+        query={lastQuery}
       />
-
 
       {/* Chat Area */}
       <div
         className={`flex flex-col h-full overflow-hidden transition-all duration-300 ${
-          isSidebarOpen ? "w-[calc(100%-800px)]" : "w-[calc(100%-40px)]"
+          isSidebarOpen ? "w-[calc(100%-1100px)]" : "w-[calc(100%-40px)]"
         } min-w-[300px]`}
       >
         {/* Conversation Area */}
@@ -263,8 +277,6 @@ const ChatContainer = ({
             setIsSidebarOpen(true);
           }}
         />
-
-
         {/* Message Input */}
         <MessageInput
           onSendMessage={handleSendMessage}

@@ -28,7 +28,7 @@ const Home = () => {
             />
           </div>
           <h1 className="text-xl font-semibold leading-tight">
-            AI Manufacturing Assistant
+            Lightweight Movie search
             <div className="text-sm text-muted-foreground leading-none">
               by Christian Leiva Beltran · v0.01
             </div>

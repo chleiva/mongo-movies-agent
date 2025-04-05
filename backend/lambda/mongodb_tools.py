@@ -6,16 +6,17 @@ import json
 import boto3
 
 
+
 # Get secret name from environment variable
 secret_name = os.environ["SECRET_NAME"]
 region_name = os.environ.get("AWS_REGION", "us-west-2")  # fallback default
 
 # Create a Secrets Manager client
 session = boto3.session.Session()
-client = session.client(service_name="secretsmanager", region_name=region_name)
+secret_client = session.client(service_name="secretsmanager", region_name=region_name)
 
 # Retrieve secret value
-get_secret_value_response = client.get_secret_value(SecretId=secret_name)
+get_secret_value_response = secret_client.get_secret_value(SecretId=secret_name)
 secrets = json.loads(get_secret_value_response["SecretString"])
 
 # Now you can access keys inside the secret
@@ -23,8 +24,7 @@ voyage_api_key = secrets["VOYAGE_API_KEY"]
 uri = secrets["MONGODB_URI"]
 
 
-
-client = MongoClient(uri, server_api=ServerApi('1'))
+mongo_client = MongoClient(uri, server_api=ServerApi('1'))
     
 
 # MongoDB connection helper function
@@ -33,7 +33,7 @@ def insert_document_chunk_to_mongo(file_name, page, H1, H2, H3, text, embedding,
     database_name = "manufacturing_database"
     document_chunks_collection = "documents_chunks"
 
-    db = client[database_name]  # Your database name
+    db = mongo_client[database_name]  # Your database name
     collection = db[document_chunks_collection]  # Your collection name
     
     # Prepare the document to be inserted

@@ -1,0 +1,9 @@
+FROM public.ecr.aws/lambda/python:3.11
+
+RUN mkdir -p /layer/python
+WORKDIR /layer/python
+
+# Install OpenAI and pymongo to the layer
+RUN pip install openai pymongo -t .
+
+CMD ["bash"]

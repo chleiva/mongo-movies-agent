@@ -139,7 +139,7 @@ function App() {
             {isAuthenticated ? (
               <>
                 <Route path="/" element={<Home />} />
-                {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
+                {import.meta.env.VITE_TEMPO === "true" && (routes)}
               </>
             ) : (
               <Route
