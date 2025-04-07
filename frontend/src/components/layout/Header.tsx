@@ -21,6 +21,15 @@ interface HeaderProps {
   onLogout?: () => void;
 }
 
+const logout = () => {
+  localStorage.removeItem("id_token");
+  localStorage.removeItem("refresh_token");
+
+  const logoutUrl = `https://auth.mongoagent.com/logout?client_id=2fvd6tbv3a46rlu3shr14oj93b&logout_uri=${encodeURIComponent("https://mongoagent.com")}`;
+  window.location.href = logoutUrl;
+};
+
+
 
 
 const Header = ({
@@ -80,10 +89,10 @@ const Header = ({
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
-              </DropdownMenuItem>
+              <DropdownMenuItem onClick={logout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Log out</span>
+            </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (

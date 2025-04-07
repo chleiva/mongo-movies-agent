@@ -5,6 +5,7 @@ import os
 import json
 import boto3
 from openai import OpenAI
+from models import create_embeddings
 
 # Get secret name from environment variable
 secret_name = os.environ["SECRET_NAME"]
@@ -27,22 +28,6 @@ client = OpenAI(api_key=openai_api_key)
 
 # Connect to MongoDB
 mongo_client = MongoClient(uri, server_api=ServerApi('1'))
-
-
-def create_embeddings(text):
-    print (f"creating embeddings, text: {text}")
-    try:
-        response = client.embeddings.create(
-            model="text-embedding-3-large",
-            input=[text]
-        )
-        embedding = response.data[0].embedding
-        print (f"embeddings: {embedding}")
-        return embedding
-    except Exception as e:
-        print(f"[Embedding Error] Failed to create embedding: {e}")
-        return None
-
 
 
 

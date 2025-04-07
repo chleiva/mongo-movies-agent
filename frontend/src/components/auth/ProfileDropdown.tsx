@@ -23,13 +23,25 @@ interface ProfileDropdownProps {
   onProfile?: () => void;
 }
 
+
+const onLogout = () => {
+  localStorage.removeItem("id_token");
+  localStorage.removeItem("refresh_token");
+
+  const logoutUrl = `https://auth.mongoagent.com/logout?client_id=2fvd6tbv3a46rlu3shr14oj93b&logout_uri=${encodeURIComponent("https://mongoagent.com")}`;
+
+  window.location.href = logoutUrl;
+};
+
+
+
 const ProfileDropdown = ({
   isLoggedIn = false,
   userName = "Guest User",
   userEmail = "guest@example.com",
   userAvatarUrl = "",
   onLogin = () => console.log("Login clicked"),
-  onLogout = () => console.log("Logout clicked"),
+  onLogout = () => {},
   onSettings = () => console.log("Settings clicked"),
   onHelp = () => console.log("Help clicked"),
   onProfile = () => console.log("Profile clicked"),
@@ -42,6 +54,19 @@ const ProfileDropdown = ({
       .join("")
       .toUpperCase();
   };
+
+
+  const handleLogout = () => {
+    localStorage.removeItem("id_token");
+    localStorage.removeItem("refresh_token");
+    const logoutUrl = `https://auth.mongoagent.com/logout?client_id=2fvd6tbv3a46rlu3shr14oj93b&logout_uri=${encodeURIComponent("https://mongoagent.com")}`;
+    window.location.href = logoutUrl;
+
+    if (onLogout) {
+      onLogout();
+    }
+  };
+
 
   return (
     <div className="bg-background">
@@ -80,7 +105,7 @@ const ProfileDropdown = ({
                 <span>Help</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onLogout}>
+              <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>
@@ -89,9 +114,9 @@ const ProfileDropdown = ({
             <>
               <DropdownMenuLabel>Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onLogin}>
-                <LogIn className="mr-2 h-4 w-4" />
-                <span>Log in</span>
+              <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onHelp}>
                 <HelpCircle className="mr-2 h-4 w-4" />

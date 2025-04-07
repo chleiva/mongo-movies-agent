@@ -35,7 +35,7 @@ const ConversationArea = ({
   messages = [
     {
       id: "1",
-      content: "Hello, I am your movies expert, ask me any question about movies",
+      content: "Hello, I am your movies expert, ask me any question about a movie in natural language, or type a curl command to call my API.",
       sender: "bot",
       timestamp: new Date(Date.now() - 60000 * 5),
     },

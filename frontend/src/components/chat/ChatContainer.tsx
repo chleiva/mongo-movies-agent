@@ -4,6 +4,15 @@ import MessageInput from "./MessageInput";
 import MovieSidebar from "../sidebar/MovieSidebar";
 import MovieList, { Movie } from '../MovieList';
 
+
+const COGNITO_DOMAIN = "https://auth.mongoagent.com";
+const CLIENT_ID = "2fvd6tbv3a46rlu3shr14oj93b";
+const REDIRECT_URI = window.location.origin; // auto resolves to http://localhost:5173 or https://mongoagent.com
+const RESPONSE_TYPE = "code";
+const SCOPE = "openid email profile";
+const apiBaseUrl = "https://hgbb1jpvec.execute-api.us-west-2.amazonaws.com/prod/"
+
+
 interface Message {
   id: string;
   content: string;
@@ -12,6 +21,21 @@ interface Message {
   documentReferences?: DocumentReference[];
   isLoading?: boolean;
 }
+
+interface ChatContainerProps {
+  initialMessages?: Message[];
+  initialDocuments?: AppDocument[];
+  aiEnabled: boolean;
+  retrievalMode: "semantic" | "hybrid";
+}
+
+
+interface ParsedCurl {
+  method: string;
+  path: string;
+  body: any | null;
+}
+
 
 interface DocumentReference {
   id: string;
@@ -28,11 +52,12 @@ interface ChatContainerProps {
   initialDocuments?: AppDocument[];
 }
 
+
 const ChatContainer = ({
   initialMessages = [
     {
       id: "1",
-      content: "Hello, I am your movies expert, ask me any question about movies",
+      content: "Hello, I am your movies expert, ask me any question about a movie in natural language, or type a curl command to call my API.",
       sender: "bot",
       timestamp: new Date(Date.now() - 60000 * 5),
     },
@@ -49,6 +74,30 @@ const ChatContainer = ({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarUrl, setSidebarUrl] = useState<string | null>(null);
+
+  
+  const parseCurlCommand = (curl: string): ParsedCurl | null => {
+    try {
+      const methodMatch = curl.match(/-X\s+(GET|POST|PUT|DELETE|PATCH)/i);
+      const dataMatch = curl.match(/--data|-d\s+'([^']+)'/);
+      
+      // NEW: match either full URL or relative path
+      const urlMatch = curl.match(/curl\s+(-X\s+\w+\s+)?(['"]?)([^'" ]+)\2/);
+      const rawPath = urlMatch ? urlMatch[3] : null;
+  
+      if (!rawPath) return null;
+  
+      const method = methodMatch ? methodMatch[1].toUpperCase() : "GET";
+      const path = rawPath.startsWith("/") ? rawPath : `/${rawPath}`;
+      const body = dataMatch ? JSON.parse(dataMatch[1]) : null;
+  
+      return { method, path, body };
+    } catch (e) {
+      console.error("❌ Failed to parse curl:", e);
+      return null;
+    }
+  };
+  
 
 
   // Show sidebar if there are any referenced documents
@@ -69,43 +118,118 @@ const ChatContainer = ({
     }
   }
   
+
+
   const handleSendMessage = async (content: string) => {
     if (!content.trim()) return;
   
     const idToken = localStorage.getItem("id_token");
-    // Only require idToken
     if (!idToken || isTokenExpired(idToken)) {
-      // Redirect to homepage if not logged in
-      window.location.href = "/";
+      alert("Your session expired. Redirecting to login.");
+      window.location.href = `${COGNITO_DOMAIN}/oauth2/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPE)}`;
       return;
     }
-    
-    // Optionally get userId if it exists
-    const userId = localStorage.getItem("user_id");
-    
   
-    // Add user message
+    const userId = localStorage.getItem("user_id");
+  
+    // Create a new user message.
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: `user-${Date.now()}`,
       content,
       sender: "user",
       timestamp: new Date(),
     };
-    setMessages((prev) => [...prev, userMessage]);
   
-    // Show loading bubble
+    // Create a loading spinner message with a unique id.
+    const loadingMessageId = `loading-${Date.now()}`;
+
     const loadingMessage: Message = {
-      id: `loading-${Date.now()}`,
+      id: loadingMessageId,
       content: "",
       sender: "bot",
       timestamp: new Date(),
       isLoading: true,
     };
-    setMessages((prev) => [...prev, loadingMessage]);
+  
+    // Append both messages using the functional update so we always start from the latest state.
+    setMessages((prev) => [...prev, userMessage, loadingMessage]);
     setIsLoading(true);
+
+    let botResponse;
+    let movieList;
+
   
     try {
-      setMovieResults([]); // Clear previous search results
+      if (content.trim().toLowerCase().startsWith("curl ")) {
+
+        const parsed = parseCurlCommand(content.trim());
+
+        console.log("parsed", parsed);
+  
+        if (!parsed) {
+          return "❌ Sorry, I couldn't parse your curl command. Please check the format.";
+        }
+      
+        try {
+          const response = await fetch(`${apiBaseUrl}${parsed.path}`, {
+            method: parsed.method,
+            headers: {
+              Authorization: `Bearer ${idToken}`,
+              "Content-Type": "application/json",
+            },
+            body: parsed.body ? JSON.stringify(parsed.body) : undefined,
+          });
+      
+          const status = response.status;
+          const statusText = response.statusText;
+      
+          let responseBody: string;
+          const contentType = response.headers.get("Content-Type") || "";
+      
+          if (contentType.includes("application/json")) {
+            try {
+              // Prevent trying to parse empty body (e.g., from DELETE 204 No Content)
+              const text = await response.text();
+              responseBody = text;
+          
+              if (text) {
+                const json = JSON.parse(text);
+                responseBody = JSON.stringify(json, null, 2);
+              } else {
+                responseBody = "{}"; // or a more descriptive fallback like 'No content'
+              }
+            } catch (err) {
+              console.error("❌ JSON parsing failed:", err);
+              responseBody = "Invalid JSON response";
+            }
+          } else {
+            responseBody = await response.text();
+          }
+          
+          console.log("ResponseBody >>>", responseBody);
+          
+          const formattedJson = [
+            `📡 **API Response**`,
+            `Status: \`${status} ${statusText}\``,
+            responseBody || "*No content returned*"
+          ].join("\n");
+          
+          botResponse = formattedJson;
+          
+        
+        botResponse = formattedJson;
+        
+        
+
+        } catch (error: any) {
+          console.error("❌ Curl execution error:", error);
+          botResponse = "There was an error processing the curl command or its response."
+        }
+
+
+      } else {
+  
+      // Normal flow: call your movies API.
       const response = await fetch(
         "https://hgbb1jpvec.execute-api.us-west-2.amazonaws.com/prod/movies/search",
         {
@@ -117,43 +241,44 @@ const ChatContainer = ({
           body: JSON.stringify({
             user_id: userId,
             request: content,
-            history: [...messages, userMessage].map((msg) => ({
-              sender: msg.sender,
-              content: msg.content,
-              timestamp: msg.timestamp,
-            })),
-          }),  
+            // IMPORTANT: Do not use the stale "messages" variable here.
+            // If you need the full history, consider using a ref or maintain history in another state.
+            // Here, we send just the new user message as history.
+            history: [
+              {
+                sender: userMessage.sender,
+                content: userMessage.content,
+                timestamp: userMessage.timestamp,
+              },
+            ],
+          }),
         }
       );
-    
-      console.log("HTTP Status:", response.status, response.statusText);
-    
+  
       const text = await response.text();
-      console.log("Raw Response Body:", text);
-    
       let responseJson;
       try {
         responseJson = JSON.parse(text);
       } catch (e) {
-        console.error("Failed to parse JSON:", e);
         responseJson = {};
       }
-
-      const message = responseJson.message || "Here are some movie results:";
-
-      const movieList = Array.isArray(responseJson.movies) ? responseJson.movies : [];
-      setMovieResults(movieList);  // 💾 Store movies in state
-      setLastQuery(content);
-      setIsSidebarOpen(true);
+  
+      botResponse = responseJson.message || "Here are some movie results:";
+      movieList = Array.isArray(responseJson.movies) ? responseJson.movies : [];
+  
       setMovieResults(movieList);
-      
-      const botResponse = message;
+      setIsSidebarOpen(true);
+    }
 
-      console.log("Parsed bot response:", botResponse);
 
+
+      setLastQuery(content);
+
+  
+      // Remove the loading message and append the bot's response.
       setMessages((prev) =>
         prev
-          .filter((msg) => !msg.isLoading)
+          .filter((msg) => msg.id !== loadingMessageId)
           .concat({
             id: `bot-${Date.now()}`,
             content: botResponse,
@@ -161,13 +286,11 @@ const ChatContainer = ({
             timestamp: new Date(),
           })
       );
-
-
     } catch (err) {
       console.error("Error calling API:", err);
       setMessages((prev) =>
         prev
-          .filter((msg) => !msg.isLoading)
+          .filter((msg) => msg.id !== loadingMessageId)
           .concat({
             id: `bot-${Date.now()}`,
             content: "Apologies, error trying to contact the AI agent API.",
@@ -177,13 +300,10 @@ const ChatContainer = ({
       );
     } finally {
       setIsLoading(false);
-  
     }
-
-    
   };
   
-
+  
 
 
   const handleAttachFile = (file: File) => {
@@ -234,19 +354,7 @@ const ChatContainer = ({
     setIsSidebarOpen(true);
   };
 
-  const handleViewDocument = (doc: AppDocument) => {
-    window.open(doc.url, "_blank");
-  };
 
-  const handleDownloadDocument = (doc: AppDocument) => {
-    const link = document.createElement("a");
-    link.href = doc.url;
-    link.download = doc.name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-   };
-  
 
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);

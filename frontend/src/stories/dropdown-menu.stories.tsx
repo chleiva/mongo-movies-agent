@@ -40,6 +40,15 @@ const meta = {
 };
 export default meta;
 
+const logout = () => {
+  localStorage.removeItem("id_token");
+  localStorage.removeItem("refresh_token");
+
+  const logoutUrl = `https://auth.mongoagent.com/logout?client_id=2fvd6tbv3a46rlu3shr14oj93b&logout_uri=${encodeURIComponent("https://mongoagent.com")}`;
+  window.location.href = logoutUrl;
+};
+
+
 export const Base = {
   render: () => (
     <DropdownMenu>
@@ -120,11 +129,11 @@ export const Base = {
           <span>API</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
-          <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
-        </DropdownMenuItem>
+        <DropdownMenuItem onClick={logout}>
+        <LogOut className="mr-2 h-4 w-4" />
+        <span>Log out</span>
+        <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
+      </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   ),

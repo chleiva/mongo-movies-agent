@@ -80,7 +80,6 @@ class MovieApiStack(Stack):
 
 
 
-
         # 💡 Lambda Function to handle movies CRUD
         movies_handler = _lambda.Function(
             self, "MoviesHandler",

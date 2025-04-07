@@ -121,12 +121,21 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
           )}
 
           {/* Subtle Evaluation Metadata */}
-          {(movie.score !== undefined || movie.source_embedding) && (
-            <div className="text-xs text-gray-500 mt-4 italic">
-              {movie.score !== undefined && <>Score: {movie.score.toFixed(4)} </>}
-              {movie.source_embedding && <>| Source: {movie.source_embedding}</>}
-            </div>
-          )}
+            {/* Subtle Evaluation Metadata */}
+            {(movie.score !== undefined || movie.source_embedding || movie._id) && (
+              <div className="text-xs text-gray-500 mt-4 italic">
+                {movie.score !== undefined && <>Score: {movie.score.toFixed(4)} </>}
+                {movie._id && (
+                  <>
+                    | ID:{' '}
+                    {typeof movie._id === 'string'
+                      ? movie._id
+                      : (movie._id as { $oid: string }).$oid}
+                  </>
+                )}
+                {movie.source_embedding && <> | Source: {movie.source_embedding}</>}
+              </div>
+            )}
         </div>
       </div>
     </div>
