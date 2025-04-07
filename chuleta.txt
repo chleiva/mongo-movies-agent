@@ -1,4 +1,0 @@
-docker run --rm --platform linux/arm64 \
-  -v "$PWD/backend/layer":/layer \
-  python:3.11-slim-bullseye \
-  bash -c "apt-get update && apt-get install -y gcc && pip install --no-cache-dir 'voyageai' 'pymongo[srv]' -t /layer/python"
