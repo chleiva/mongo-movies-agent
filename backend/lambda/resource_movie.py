@@ -5,6 +5,7 @@ from utils import response
 from bson import ObjectId
 from datetime import datetime
 
+
 def clean_mongo_document(doc):
     def convert_value(val):
         if isinstance(val, ObjectId):
@@ -37,18 +38,14 @@ def add_embeddings(data):
 
 
 def create_movie(data):
-
     data = add_embeddings(data)
-    
     result = collection.insert_one(data)
     return response(201, {'_id': str(result.inserted_id)})
 
 
 
 def update_movie(movie_id, data):
-    
     data = add_embeddings(data)
-
     result = collection.update_one({'_id': ObjectId(movie_id)}, {'$set': data})
     if result.matched_count == 0:
         return response(404, {'message': 'Movie not found'})

@@ -11,9 +11,29 @@ interface HomeProps {
 }
 
 const Home = ({ isAuthenticated }: HomeProps) => {
-  const [aiEnabled, setAiEnabled] = useState(true); // true = AI On
+
+  const [aiEnabled, setAiEnabled] = useState(false); // true = AI On
   const [isHybrid, setIsHybrid] = useState(false); // false = Semantic, true = Hybrid
   const [isReranking, setIsreranking] = useState(false); // false = Semantic, true = Hybrid
+
+
+  // Logic wrappers
+  const handleAiEnabledChange = (checked) => {
+    if (checked) {
+      setIsHybrid(true); // force Hybrid ON
+      setAiEnabled(true); // allow AI
+    } else {
+      setAiEnabled(false); // just turn AI off
+    }
+  };
+
+  const handleIsHybridChange = (checked) => {
+    setIsHybrid(checked);
+    if (!checked) {
+      setAiEnabled(false); // turn AI off if Hybrid is disabled
+    }
+  };
+
 
   return (
     <div className="flex flex-col h-screen w-full bg-background">
@@ -41,32 +61,21 @@ const Home = ({ isAuthenticated }: HomeProps) => {
           <div className="flex items-center space-x-4 mr-2">
             {/* AI Toggle */}
             <div className="flex items-center space-x-2">
-              <Label htmlFor="ai-toggle" className="text-sm">AI Agent</Label>
+              <Label htmlFor="ai-toggle" className="text-sm">LLM</Label>
               <Switch
                 id="ai-toggle"
                 checked={aiEnabled}
-                onCheckedChange={setAiEnabled}
+                onCheckedChange={handleAiEnabledChange}
               />
             </div>
   
-
-            {/* Retrieval Toggle */}
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="reranking-toggle" className="text-sm">Re-ranking</Label>
-              <Switch
-                id="reranking-toggle"
-                checked={isReranking}
-                onCheckedChange={setIsreranking}
-              />
-            </div>
-
             {/* Retrieval Toggle */}
             <div className="flex items-center space-x-2">
               <Label htmlFor="retrieval-toggle" className="text-sm">Hybrid Search</Label>
               <Switch
                 id="retrieval-toggle"
                 checked={isHybrid}
-                onCheckedChange={setIsHybrid}
+                onCheckedChange={handleIsHybridChange}
               />
             </div>
           </div>
@@ -88,7 +97,8 @@ const Home = ({ isAuthenticated }: HomeProps) => {
       <main className="flex-1 overflow-hidden">
         <ChatContainer
           aiEnabled={aiEnabled}
-          retrievalMode={isHybrid ? "hybrid" : "semantic"}
+          isHybrid={isHybrid}
+          isReranking={isReranking}
         />
       </main>
     </div>

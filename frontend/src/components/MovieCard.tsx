@@ -26,6 +26,8 @@ type Movie = {
   num_mflix_comments?: number;
   score?: number;
   source_embedding?: string;
+  vs_score?: number;
+  fts_score?: number;
 };
 
 interface MovieCardProps {
@@ -125,6 +127,9 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
             {(movie.score !== undefined || movie.source_embedding || movie._id) && (
               <div className="text-xs text-gray-500 mt-4 italic">
                 {movie.score !== undefined && <>Score: {movie.score.toFixed(4)} </>}
+                {movie.vs_score !== undefined && <>| VS_Score: {movie.vs_score.toFixed(4)} </>}
+                {movie.fts_score !== undefined && <>| TS_Score: {movie.fts_score.toFixed(8)} </>}
+                
                 {movie._id && (
                   <>
                     | ID:{' '}

@@ -31,7 +31,7 @@ mongo_client = MongoClient(uri, server_api=ServerApi('1'))
 
 
 
-def semantic_search(text, limit=50, filters=None):
+def semantic_search(text, limit=50, filters=None, reranking = False):
     database_name = "sample_mflix"
     document_chunks_collection = "movies"
 
@@ -126,5 +126,9 @@ def semantic_search(text, limit=50, filters=None):
             merged_results[_id] = result
 
     deduplicated_sorted_results = sorted(merged_results.values(), key=lambda x: x["score"], reverse=True)
+
+
+    #removed duplicates
+    deduplicated_sorted_results = list({doc['_id']: doc for doc in deduplicated_sorted_results}.values())
 
     return deduplicated_sorted_results[:limit]

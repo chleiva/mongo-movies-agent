@@ -26,8 +26,10 @@ interface ChatContainerProps {
   initialMessages?: Message[];
   initialDocuments?: AppDocument[];
   aiEnabled: boolean;
-  retrievalMode: "semantic" | "hybrid";
+  isHybrid: boolean;
+  isReranking: boolean;
 }
+
 
 
 interface ParsedCurl {
@@ -63,6 +65,9 @@ const ChatContainer = ({
     },
   ],
   initialDocuments = [],
+  aiEnabled,
+  isHybrid,
+  isReranking,
 }: ChatContainerProps) => {
 
   const [movieResults, setMovieResults] = useState<Movie[]>([]);
@@ -229,9 +234,16 @@ const ChatContainer = ({
 
       } else {
   
+
+      const url = `${apiBaseUrl}movies/search` +
+      `?hybrid=${isHybrid}` +
+      `&agent=${aiEnabled}` +
+      `&reranking=${isReranking}`;
+
+
       // Normal flow: call your movies API.
       const response = await fetch(
-        "https://hgbb1jpvec.execute-api.us-west-2.amazonaws.com/prod/movies/search",
+        url,
         {
           method: "POST",
           headers: {
@@ -362,13 +374,6 @@ const ChatContainer = ({
 
   return (
     <div className="flex h-full w-full bg-background">
-      {/* Document Sidebar */}
-      <MovieSidebar
-        isOpen={isSidebarOpen}
-        onToggle={toggleSidebar}
-        movies={movieResults}
-        query={lastQuery}
-      />
 
       {/* Chat Area */}
       <div
@@ -391,6 +396,17 @@ const ChatContainer = ({
           onAttachFile={handleAttachFile}
           isLoading={isLoading}
         />
+
+
+      {/* Document Sidebar */}
+      <MovieSidebar
+        isOpen={isSidebarOpen}
+        onToggle={toggleSidebar}
+        movies={movieResults}
+        query={lastQuery}
+      />
+
+
       </div>
     </div>
   );

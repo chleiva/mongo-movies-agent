@@ -14,14 +14,17 @@ interface MovieSidebarProps {
 const MovieSidebar = ({ isOpen, onToggle, movies, query }: MovieSidebarProps) => {
   return (
         <div
-        className={cn(
-            "fixed top-0 right-0 h-full z-50 flex flex-col border-l bg-background transition-all duration-300 ease-in-out shadow-lg",
-            isOpen ? "w-full sm:w-[90vw] md:w-[700px] lg:w-[1100px]" : "w-[40px]"
-        )}
+          className={cn(
+            "fixed top-16 right-0 h-[calc(100vh-4rem)] z-50 flex flex-col border-l bg-background transition-all duration-300 ease-in-out shadow-lg",
+            isOpen
+              ? "w-full sm:w-[90vw] md:w-[700px] lg:w-[1100px]"
+              : "w-[40px]"
+          )}
         >
+
       <div className="flex items-center justify-between p-4">
         {isOpen && (
-          <h2 className="text-sm font-medium truncate max-w-[500px]">
+          <h2 className="text-sm font-medium max-w-[500px] break-words leading-snug">
             {query ? `Results for: "${query}"` : "Movie Results"}
           </h2>
         )}
@@ -31,7 +34,7 @@ const MovieSidebar = ({ isOpen, onToggle, movies, query }: MovieSidebarProps) =>
           onClick={onToggle}
           className="ml-auto"
         >
-          {isOpen ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          {isOpen ? <ChevronRight size={32} /> : <ChevronLeft size={32} />}
         </Button>
       </div>
 

@@ -5,6 +5,7 @@ import os
 import json
 import boto3
 from openai import OpenAI
+import random
 
 # Get secret name from environment variable
 secret_name = os.environ["SECRET_NAME"]
@@ -38,7 +39,6 @@ def create_embeddings(text):
             input=[text]
         )
         embedding = response.data[0].embedding
-        print (f"embeddings: {embedding}")
         return embedding
     except Exception as e:
         print(f"[Embedding Error] Failed to create embedding: {e}")

@@ -56,8 +56,8 @@ const ConversationArea = ({
 
   return (
     <div className="flex flex-col h-full w-full bg-gray-50 dark:bg-gray-900">
-      <ScrollArea className="flex-1 p-4">
-        <div className="flex flex-col space-y-4">
+    <ScrollArea className="flex-1 w-full px-4 py-2">
+      <div className="flex flex-col space-y-4 w-full">
           {messages.map((message) => (
             <div
               key={message.id}
