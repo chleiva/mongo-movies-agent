@@ -30,7 +30,7 @@ def handler(event, context):
             # Route to appropriate function
             if agent:
                 results = intelligent_search(query)
-                search_type = " Hybrid Search Assisted by LLM"
+                search_type = "Hybrid Search (LLM-Assisted). [Note: LLM-assisted search is experimental and may not always yield optimal results.]"
             elif hybrid:
                 results = hybrid_search(query, limit=n, reranking=reranking)
                 search_type = " Hybrid Search"

@@ -1,0 +1,474 @@
+openapi: 3.0.0
+info:
+  title: Movie Service API
+  description: |
+    This API provides services for managing movie data, including CRUD operations
+    and semantic search functionality.
+  version: 1.0.0
+  contact:
+    email: api-support@example.com
+servers:
+  - url: https://example.execute-api.us-east-1.amazonaws.com/prod
+    description: Production server
+
+components:
+  securitySchemes:
+    cognitoAuth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_C7yJkMG3f
+          scopes: {}
+      x-amazon-apigateway-authorizer:
+        type: cognito_user_pools
+        providerARNs:
+          - arn:aws:cognito-idp:us-east-1:ACCOUNT_ID:userpool/us-east-1_C7yJkMG3f
+
+  schemas:
+    Movie:
+      type: object
+      required:
+        - title
+        - year
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the movie
+          example: "5f8d0d55e2b10a154c8e58a9"
+        title:
+          type: string
+          description: Movie title
+          example: "The Shawshank Redemption"
+        year:
+          type: integer
+          description: Release year
+          example: 1994
+        director:
+          type: string
+          description: Movie director
+          example: "Frank Darabont"
+        genre:
+          type: array
+          items:
+            type: string
+          description: Movie genres
+          example: ["Drama", "Crime"]
+        plot:
+          type: string
+          description: Brief plot summary
+          example: "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency."
+        cast:
+          type: array
+          items:
+            type: string
+          description: Main cast members
+          example: ["Tim Robbins", "Morgan Freeman"]
+        rating:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 10
+          description: Movie rating (0-10)
+          example: 9.3
+        runtime:
+          type: integer
+          description: Runtime in minutes
+          example: 142
+        poster_url:
+          type: string
+          format: uri
+          description: URL to movie poster image
+          example: "https://example.com/posters/shawshank.jpg"
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+
+    MovieList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Movie'
+
+    MovieCreateRequest:
+      type: object
+      required:
+        - title
+        - year
+      properties:
+        title:
+          type: string
+          example: "Inception"
+        year:
+          type: integer
+          example: 2010
+        director:
+          type: string
+          example: "Christopher Nolan"
+        genre:
+          type: array
+          items:
+            type: string
+          example: ["Sci-Fi", "Action", "Thriller"]
+        plot:
+          type: string
+          example: "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O."
+        cast:
+          type: array
+          items:
+            type: string
+          example: ["Leonardo DiCaprio", "Joseph Gordon-Levitt"]
+        rating:
+          type: number
+          format: float
+          example: 8.8
+        runtime:
+          type: integer
+          example: 148
+        poster_url:
+          type: string
+          format: uri
+          example: "https://example.com/posters/inception.jpg"
+
+    MovieUpdateRequest:
+      $ref: '#/components/schemas/MovieCreateRequest'
+
+    SearchRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          description: Semantic search query
+          example: "sci-fi movies about time travel"
+        limit:
+          type: integer
+          description: Maximum number of results to return
+          default: 10
+          example: 5
+        threshold:
+          type: number
+          format: float
+          description: Similarity threshold for search results
+          minimum: 0
+          maximum: 1
+          default: 0.7
+          example: 0.8
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        requestId:
+          type: string
+          description: Request ID for troubleshooting
+
+paths:
+  /movies:
+    get:
+      summary: List all movies
+      description: Returns a list of all movies in the database
+      security:
+        - cognitoAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of movies to return
+          required: false
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          description: Number of movies to skip
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: sort
+          in: query
+          description: Field to sort by
+          required: false
+          schema:
+            type: string
+            enum: [title, year, rating]
+            default: title
+      responses:
+        '200':
+          description: A list of movies
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieList'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    post:
+      summary: Create a new movie
+      description: Add a new movie to the database
+      security:
+        - cognitoAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MovieCreateRequest'
+      responses:
+        '201':
+          description: Movie created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    options:
+      summary: CORS support
+      description: Enable CORS by returning correct headers
+      responses:
+        '200':
+          description: CORS headers returned
+          headers:
+            Access-Control-Allow-Headers:
+              schema:
+                type: string
+            Access-Control-Allow-Methods:
+              schema:
+                type: string
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+
+  /movies/{id}:
+    parameters:
+      - name: id
+        in: path
+        description: Movie ID
+        required: true
+        schema:
+          type: string
+    
+    get:
+      summary: Get a movie by ID
+      description: Returns a specific movie by its ID
+      security:
+        - cognitoAuth: []
+      responses:
+        '200':
+          description: Movie found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Movie not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    put:
+      summary: Update a movie
+      description: Update an existing movie by its ID
+      security:
+        - cognitoAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MovieUpdateRequest'
+      responses:
+        '200':
+          description: Movie updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Movie not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    delete:
+      summary: Delete a movie
+      description: Delete a movie by its ID
+      security:
+        - cognitoAuth: []
+      responses:
+        '204':
+          description: Movie deleted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Movie not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    options:
+      summary: CORS support
+      description: Enable CORS by returning correct headers
+      responses:
+        '200':
+          description: CORS headers returned
+          headers:
+            Access-Control-Allow-Headers:
+              schema:
+                type: string
+            Access-Control-Allow-Methods:
+              schema:
+                type: string
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+
+  /movies/search:
+    post:
+      summary: Semantic search for movies
+      description: |
+        Search for movies using natural language queries.
+        This endpoint uses AI-powered semantic search to find movies based on descriptions,
+        themes, plot elements, or other semantic features.
+      security:
+        - cognitoAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    $ref: '#/components/schemas/MovieList'
+                  total:
+                    type: integer
+                    description: Total number of matching results
+                  query:
+                    type: string
+                    description: The original query
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    options:
+      summary: CORS support
+      description: Enable CORS by returning correct headers
+      responses:
+        '200':
+          description: CORS headers returned
+          headers:
+            Access-Control-Allow-Headers:
+              schema:
+                type: string
+            Access-Control-Allow-Methods:
+              schema:
+                type: string
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+
+security:
+  - cognitoAuth: []
