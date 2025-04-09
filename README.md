@@ -42,10 +42,12 @@
 
 ## 🏗️ Architecture Overview
 
-- **Frontend**: React + Vite, hosted via S3/CloudFront with Cognito login
-- **Backend**: AWS Lambda, deployed via CDK
-- **API Gateway**: REST endpoints protected by Cognito
-- **MongoDB Atlas**: Vector indexes and text search indexes
+![Architecture Diagram](./diagram.png)
+
+- **Frontend**: React + Vite, hosted via S3/CloudFront with Cognito login  
+- **Backend**: AWS Lambda, deployed via CDK  
+- **API Gateway**: REST endpoints protected by Cognito  
+- **MongoDB Atlas**: Vector indexes and text search indexes  
 
 ---
 
