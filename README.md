@@ -193,6 +193,19 @@ curl -X POST "movies/search?agent=true" \
 
 ---
 
+## 🛠 Developer Notes
+
+If you're diving into the codebase, a good place to start is the main Lambda handler:
+
+📄 [`movies_api_handler.py`](https://github.com/chleiva/mongo-movies-agent/blob/main/backend/lambda/movies_api_handler.py)  
+This file contains the core routing logic for all API operations, including:
+- Movie CRUD (`/movies`, `/movies/{id}`)
+- Semantic, hybrid, and LLM-assisted search (`/movies/search`)
+- Parameter handling, error responses, and dispatch logic
+
+> Tip: Use this as the primary entry point to understand how the application processes API requests.
+
+---
 
 ## 🧩 Next Steps
 
