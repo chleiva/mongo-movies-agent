@@ -1,6 +1,6 @@
 # 🎬 MongoAgent: Semantic Movie Search with MongoDB & OpenAI Embeddings
 
-**MongoAgent** is a fully serverless, intelligent search platform that enables natural language queries over the `sample_mflix.movies` dataset. Leveraging **OpenAI’s `text-embedding-3-large`** model, **MongoDB Atlas Vector Search**, and **AWS infrastructure**, this solution supports semantic, hybrid, and intelligent retrieval across movie metadata and narratives.
+**MongoAgent** is a fully serverless, intelligent search solution that enables natural language search over the `sample_mflix.movies` dataset. Leveraging **OpenAI’s `text-embedding-3-large`** model, **MongoDB Atlas Vector Search**, and **AWS infrastructure**, this solution supports semantic, hybrid, and intelligent retrieval across movie metadata and narratives.
 
 ---
 
@@ -23,7 +23,7 @@
 | **Contextual**         | `cast`, `directors`, `awards`, `languages`, `countries`, `type`, `year` (as NL) | `text-embedding-3-large` | ~615   |
 | **Multimodal**         | `poster` (image)*                               | *(Not implemented yet)*       | N/A    |
 
-> ✅ All embedding chunks are well within the model’s 8192-token limit.
+> (multimodal has not been implemented)
 
 ---
 
@@ -49,6 +49,18 @@
 
 ---
 
+## 📘 API Documentation
+
+This project follows the [OpenAPI Specification (Swagger)](https://swagger.io/specification/) for defining endpoints, parameters, request/response schemas, and error handling.
+
+👉 **To explore the full API interactively**, open the [`apidef.yaml`](./apidef.yaml) file using a Swagger UI-compatible viewer like:
+
+- [https://editor.swagger.io/](https://editor.swagger.io/)
+- VS Code with the [Swagger Viewer extension](https://marketplace.visualstudio.com/items?itemName=Arjun.swagger-viewer)
+- Or embed it into a self-hosted Swagger UI
+
+---
+
 ## 🚀 Try It Live
 
 🔗 [https://mongoagent.com](https://mongoagent.com)
@@ -56,13 +68,37 @@
 
 Then type any `curl` command in the terminal interface or try free text search queries.
 
+
 ---
 
 ## 🧪 API Examples
 
-**Create a Movie**
+You can interact with the backend using standard `curl` requests or directly inside the [MongoAgent UI](https://mongoagent.com), which features a built-in terminal.
+
+### 🧠 Authentication Notes
+
+- 🔐 **When using external tools** (e.g., terminal or Postman):  
+  All endpoints **require** a valid **Cognito `id_token`** provided in the header:
+  ```bash
+  -H "Authorization: Bearer YOUR_ID_TOKEN"
+  ```
+
+- ✅ **When using the built-in MongoAgent terminal** at [https://mongoagent.com](https://mongoagent.com):  
+  The app **automatically adds** the `Authorization` header and the API host prefix (`https://your-api.com`).  
+  Therefore, you can use simpler curl commands like:
+
+  ```bash
+  curl -X DELETE "movies/67f4599e44361b09bfa5e62a"
+  ```
+
+---
+
+### 📦 1. Create a New Movie
+
 ```bash
-curl -X POST "movies" -H "Content-Type: application/json" -d '{
+curl -X POST "movies" \
+-H "Content-Type: application/json" \
+-d '{
   "title": "The Great Train Robbery",
   "year": 1903,
   "directors": ["Edwin S. Porter"],
@@ -75,23 +111,88 @@ curl -X POST "movies" -H "Content-Type: application/json" -d '{
 }'
 ```
 
-**Other commands:**
-- List: `curl -X GET "movies?page=2&limit=5"`
-- Get: `curl -X GET "movies/{id}"`
-- Update: `curl -X PUT "movies/{id}"`
-- Delete: `curl -X DELETE "movies/{id}"`
+---
+
+### 📄 2. List Movies
+
+```bash
+curl -X GET "movies?page=1&limit=5"
+```
 
 ---
 
-## 🧱 Assumptions & Notes
+### 🔍 3. Get a Movie by ID
 
-- Dataset is clean, English-only, no deduplication or preprocessing performed
-- Designed to scale, but not yet production-optimized for:
-  - High-frequency embedding generation
-  - Cost monitoring
-  - Sharded indexing or async pipelines
+```bash
+curl -X GET "movies/67f40b1a4f5d1ae32b11c2eb"
+```
 
 ---
+
+### ✏️ 4. Update a Movie
+
+```bash
+curl -X PUT "movies/67f40b1a4f5d1ae32b11c2eb" \
+-H "Content-Type: application/json" \
+-d '{
+  "title": "The Great Train Robbery II",
+  "year": 1943,
+  "directors": ["Edwin S. Porter"],
+  "runtime": 11,
+  "genres": ["Western", "Short"],
+  "languages": ["English"],
+  "countries": ["USA"],
+  "plot": "A group of hackers stage a brazen train hold-up...",
+  "fullplot": "Among the earliest existing films in American cinema."
+}'
+```
+
+---
+
+### 🗑️ 5. Delete a Movie
+
+```bash
+curl -X DELETE "movies/67f4599e44361b09bfa5e62a"
+```
+
+---
+
+### 🔎 6. Semantic Search
+
+```bash
+curl -X POST "movies/search?n=5&reranking=true" \
+-H "Content-Type: application/json" \
+-d '{
+  "request": "space adventures in the 1980s"
+}'
+```
+
+---
+
+### 🔀 7. Hybrid Search
+
+```bash
+curl -X POST "movies/search?hybrid=true&n=5&reranking=true" \
+-H "Content-Type: application/json" \
+-d '{
+  "request": "thrillers directed by Christopher Nolan"
+}'
+```
+
+---
+
+### 🤖 8. LLM-Assisted Search (Agentic Retrieval)
+
+```bash
+curl -X POST "movies/search?agent=true" \
+-H "Content-Type: application/json" \
+-d '{
+  "request": "animated movies with animals on the poster"
+}'
+```
+
+---
+
 
 ## 🧩 Next Steps
 
