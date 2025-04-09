@@ -84,7 +84,7 @@ You can interact with the backend using standard `curl` requests or directly ins
   ```
 
 - ✅ **When using the built-in MongoAgent terminal** at [https://mongoagent.com](https://mongoagent.com):  
-  The app **automatically adds** the `Authorization` header and the API host prefix (`https://your-api.com`).  
+  The app **automatically adds** the `Authorization` header and the API host prefix (`https://hgbb1jpvec.execute-api.us-west-2.amazonaws.com/prod/`).  
   Therefore, you can use simpler curl commands like:
 
   ```bash
